@@ -1,4 +1,5 @@
-name: Build IPA
+- name: Show structure
+        run: find . -name "*.xcodeproj" -maxdepth 3name: Build IPA
 on:
   workflow_dispatch:
 
