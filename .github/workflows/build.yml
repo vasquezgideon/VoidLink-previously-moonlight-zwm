@@ -1,7 +1,6 @@
 name: Build IPA
-"on":
+on:
   workflow_dispatch:
-
 jobs:
   build:
     runs-on: macos-latest
@@ -9,25 +8,15 @@ jobs:
       - uses: actions/checkout@v4
         with:
           submodules: recursive
-
       - name: Build
         run: |
           find . -name "*.xcodeproj"
-          xcodebuild archive \
-            -project Moonlight.xcodeproj \
-            -scheme Moonlight \
-            -configuration Release \
-            -archivePath $GITHUB_WORKSPACE/Moonlight.xcarchive \
-            CODE_SIGN_IDENTITY="" \
-            CODE_SIGNING_REQUIRED=NO \
-            CODE_SIGNING_ALLOWED=NO
-
+          xcodebuild archive -project Moonlight.xcodeproj -scheme Moonlight -configuration Release -archivePath $GITHUB_WORKSPACE/Moonlight.xcarchive CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO
       - name: Package IPA
         run: |
           mkdir -p Payload
           cp -r $GITHUB_WORKSPACE/Moonlight.xcarchive/Products/Applications/Moonlight.app Payload/
           zip -r Moonlight.ipa Payload/
-
       - name: Upload IPA
         uses: actions/upload-artifact@v4
         with:
