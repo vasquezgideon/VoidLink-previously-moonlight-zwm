@@ -1,8 +1,5 @@
-- name: Show structure
-        run: find . -name "*.xcodeproj" -maxdepth 3- name: Show structure
-        run: find . -name "*.xcodeproj" -maxdepth 3name: Build IPA
-        
-on:
+name: Build IPA
+"on":
   workflow_dispatch:
 
 jobs:
@@ -15,11 +12,12 @@ jobs:
 
       - name: Build
         run: |
+          find . -name "*.xcodeproj"
           xcodebuild archive \
             -project Moonlight.xcodeproj \
             -scheme Moonlight \
             -configuration Release \
-            -archivePath ./Moonlight.xcarchive \
+            -archivePath $GITHUB_WORKSPACE/Moonlight.xcarchive \
             CODE_SIGN_IDENTITY="" \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGNING_ALLOWED=NO
@@ -27,7 +25,7 @@ jobs:
       - name: Package IPA
         run: |
           mkdir -p Payload
-          cp -r Moonlight.xcarchive/Products/Applications/Moonlight.app Payload/
+          cp -r $GITHUB_WORKSPACE/Moonlight.xcarchive/Products/Applications/Moonlight.app Payload/
           zip -r Moonlight.ipa Payload/
 
       - name: Upload IPA
