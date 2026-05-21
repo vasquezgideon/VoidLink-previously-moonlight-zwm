@@ -8,17 +8,42 @@ jobs:
       - uses: actions/checkout@v4
         with:
           submodules: recursive
-      - name: Build
+
+      - name: Find project and scheme
         run: |
-          find . -name "*.xcodeproj"
-          xcodebuild archive -project Moonlight.xcodeproj -scheme Moonlight -configuration Release -archivePath $GITHUB_WORKSPACE/Moonlight.xcarchive CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO
+          PROJ=$(find . -name "*.xcodeproj" \
+            -not -path "*/moonlight-common/*" \
+            -not -path "*/X1Kit/*" | head -1)
+          echo "Found project: $PROJ"
+          echo "PROJ=$PROJ" >> $GITHUB_ENV
+          SCHEME=$(xcodebuild -project "$PROJ" -list 2>/dev/null \
+            | grep -A 20 "Schemes:" | grep -v "Schemes:" \
+            | head -1 | xargs)
+          echo "Found scheme: $SCHEME"
+          echo "SCHEME=$SCHEME" >> $GITHUB_ENV
+
+      - name: Build archive
+        run: |
+          xcodebuild archive \
+            -project "$PROJ" \
+            -scheme "$SCHEME" \
+            -configuration Release \
+            -archivePath $GITHUB_WORKSPACE/App.xcarchive \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO
+
       - name: Package IPA
         run: |
+          APP=$(find $GITHUB_WORKSPACE/App.xcarchive/Products/Applications \
+            -name "*.app" | head -1)
+          echo "Found app: $APP"
           mkdir -p Payload
-          cp -r $GITHUB_WORKSPACE/Moonlight.xcarchive/Products/Applications/Moonlight.app Payload/
-          zip -r Moonlight.ipa Payload/
+          cp -r "$APP" Payload/
+          zip -r App.ipa Payload/
+
       - name: Upload IPA
         uses: actions/upload-artifact@v4
         with:
-          name: Moonlight
-          path: Moonlight.ipa
+          name: VoidLink
+          path: App.ipa
